@@ -1,6 +1,8 @@
+#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #define FIELD_HEIGHT 25
 #define FIELD_WIDTH 80
@@ -34,16 +36,32 @@ void delay(int seconds) {
 
 int main() {
     int** matr = create_matrix();
+    initscr();
+    noecho();
+    nodelay(stdscr, TRUE);
+    cbreak();
+    curs_set(FALSE);
 
     while (1) {
         update_field(matr);
 
+        clear();
         display(matr);
+        refresh();
 
-        delay(1);
+        usleep(1);
     }
 
     return 0;
+}
+
+int speed(int n) {
+    int speed;
+    if (n == 1) {
+        speed = 100000;
+    }
+    if (n == 2) speed = 4000;
+    return speed;
 }
 
 void update_field(int** field) {
@@ -103,28 +121,29 @@ int get_right_index_y(int y) {
 }
 
 void display(int** field) {
-    printf(
-        "\n_______________"
-        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
-        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
-        "\n");
+    for (int i = 0; i < FIELD_WIDTH + 2; ++i) printw("-");
+    printw("\n");
 
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
+        printw("|");
         for (int j = 0; j < FIELD_WIDTH; ++j) {
             if (field[i][j] == 1)
-                printf(LIVE_CELL);
+                printw(LIVE_CELL);
             else
-                printf(DEAD_CELL);
+                printw(DEAD_CELL);
         }
-        printf("\n");
+        printw("|");
+        printw("\n");
     }
+
+    for (int i = 0; i < FIELD_WIDTH + 2; ++i) printw("-");
 }
 
 int** allocate() {
     int** field = calloc(FIELD_HEIGHT, sizeof(int*));
 
     if (field == NULL) {
-        printf("memoy error");
+        printw("memoy error");
         exit(0);
     }
 
@@ -132,7 +151,11 @@ int** allocate() {
         field[i] = calloc(FIELD_WIDTH, sizeof(int));
 
         if (field[i] == NULL) {
-            printf("memoy error");
+            for (int i = 0; i < FIELD_HEIGHT; ++i) free(field[i]);
+
+            free(field);
+
+            printw("memoy error");
             exit(0);
         }
     }
@@ -147,7 +170,7 @@ int** create_matrix() {
 
     // -- input
 
-    char c = ' ';
+    char c;
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
         for (int j = 0; j < FIELD_WIDTH; ++j) {
             c = getchar();
@@ -159,11 +182,11 @@ int** create_matrix() {
             } else {
                 free_field(field);
 
-                printf("input error");
+                printw("input error");
                 exit(0);
             }
         }
-        c = getchar();
+        getchar();
     }
 
     return field;
