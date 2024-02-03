@@ -5,6 +5,8 @@
 #define FIELD_HEIGHT 25
 #define FIELD_WIDTH 80
 
+#define DEAD_CELL " "
+#define LIVE_CELL "*"
 /*
  * компилировать код только с флагами -Wall -Werror -Wextra
  *
@@ -23,18 +25,22 @@ int get_right_index_y(int y);
 
 void free_field(int** array);  // освобождает память
 
+void delay(int seconds) {
+    clock_t start_time = clock();
+
+    while ((clock() - start_time) / ((clock_t)CLOCKS_PER_SEC) < ((clock_t)seconds)) {
+    }
+}
+
 int main() {
     int** matr = create_matrix();
 
-    int steps = 0;
-
-    while (steps < 2) {
+    while (1) {
         update_field(matr);
 
         display(matr);
 
-        delay(10);
-        steps++;
+        delay(1);
     }
 
     return 0;
@@ -74,6 +80,7 @@ int get_alive_neighbours(int** field, int x, int y) {
 
     for (int dx = -1; dx <= 1; ++dx) {
         for (int dy = -1; dy <= 1; ++dy) {
+            if (dx == 0 && dy == 0) continue;
             int x_ind = get_right_index_x(x + dx);
             int y_ind = get_right_index_y(y + dy);
             if (field[y_ind][x_ind] == 1) count++;
@@ -96,12 +103,18 @@ int get_right_index_y(int y) {
 }
 
 void display(int** field) {
+    printf(
+        "\n_______________"
+        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        "\n");
+
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
         for (int j = 0; j < FIELD_WIDTH; ++j) {
             if (field[i][j] == 1)
-                printf("*");
+                printf(LIVE_CELL);
             else
-                printf(" ");
+                printf(DEAD_CELL);
         }
         printf("\n");
     }
