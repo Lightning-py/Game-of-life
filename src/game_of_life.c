@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-
 #define FIELD_HEIGHT 25
 #define FIELD_WIDTH 80
 
@@ -33,8 +32,10 @@ int get_right_index_x(int x);
 int get_right_index_y(int y);
 
 void free_field(int** array);  // освобождает память
+
 int main(void) {
     int** matr = create_matrix();
+    int speed = speed_3;
     // инициализация библиотеку curses
     initscr();
     // при вводе, вводимые символы не будут видны
@@ -50,9 +51,15 @@ int main(void) {
         update_field(matr);
 
         clear();
-        printw("Game of life\n");
+
+        printw("                                             ___    _ _ ___     \n");
+        printw("                    ___ ___ _____ ___    ___|  _|  | |_|  _|___ \n");
+        printw("                   | . | .'|     | -_|  | . |  _|  | | |  _| -_|\n");
+        printw("                   |_  |__,|_|_|_|___|  |___|_|    |_|_|_| |___|\n");
+        printw("                   |___|                                        \n");
+
         display(matr);
-        printw("\nhello world");
+        printw("\nspeed == %d, k and m for change speed", speed);
         refresh();
 
         usleep(speed_3);
@@ -150,7 +157,7 @@ int** allocate() {
     // если не получилось выделить паммять, выводим что все пропало и выходим из проги?
     if (field == NULL) {
         printw("memory error");
-        // это из какой библиотеки?
+        free(field);
         exit(0);
     }
     // идем от нуля до количества строк массива
