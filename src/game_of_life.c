@@ -35,7 +35,7 @@ void free_field(int** array);  // освобождает память
 
 int main(void) {
     int** matr = create_matrix();
-    int speed = speed_3;
+    int speed = speed_1;
     // инициализация библиотеку curses
     initscr();
     // при вводе, вводимые символы не будут видны
@@ -59,12 +59,12 @@ int main(void) {
         printw("                   | . | .'|     | -_|  | . |  _|  | | |  _| -_|\n");
         printw("                   |_  |__,|_|_|_|___|  |___|_|    |_|_|_| |___|\n");
         printw("                   |___|                                        \n");
-        
+
         display(matr);
-        printw("\nspeed == %d, k and m for change speed", speed);
+        printw("\nspeed == %d, k and m for change speed, ch = %c", speed, ch);
         refresh();
 
-        usleep(speed_3);
+        usleep(speed);
     } while (ch != 'q');
 
     endwin();
