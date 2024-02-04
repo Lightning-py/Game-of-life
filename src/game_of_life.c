@@ -53,13 +53,23 @@ int main(void) {
         update_field(matr);
 
         clear();
-
+        start_color();
+        //init_color(COLOR_CYAN, 164, 188, 237);
+        init_pair(1,COLOR_BLUE,COLOR_BLACK);
+        
+        init_pair(2,COLOR_RED,COLOR_BLACK);
+        init_pair(3,COLOR_GREEN,COLOR_BLACK);
+        attron(COLOR_PAIR(1));
         printw("                                             ___    _ _ ___     \n");
         printw("                    ___ ___ _____ ___    ___|  _|  | |_|  _|___ \n");
+        attroff(COLOR_PAIR(1));
+        attron(COLOR_PAIR(2));
         printw("                   | . | .'|     | -_|  | . |  _|  | | |  _| -_|\n");
+        attroff(COLOR_PAIR(2));
+        attron(COLOR_PAIR(3));
         printw("                   |_  |__,|_|_|_|___|  |___|_|    |_|_|_| |___|\n");
         printw("                   |___|                                        \n");
-        
+        attroff(COLOR_PAIR(3));
         display(matr);
         printw("\nspeed == %d, k and m for change speed", speed);
         refresh();
