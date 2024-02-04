@@ -10,51 +10,45 @@
 #define DEAD_CELL " "
 #define LIVE_CELL "*"
 
-/*
- * компилировать код только с флагами -Wall -Werror -Wextra -lncurses
- */
+int** allocate(void);
+int** create_matrix(void);
+int get_alive_neighbours(int** field, int x, int y);
 
-int** allocate(void);       // выделяет память для массива
-int** create_matrix(void);  // создает массив игрового поля 80x25 клеток и читает поле со стандартного ввода
-int get_alive_neighbours(int** field, int x,
-                         int y);  // возвращает количество живых клеток вокруг данной, принимает
-                                  // координаты клетки (необходимо учитывать то, что края поля соединены)
-void update_field(int** field);  // расчитывает следующий шаг игры и записывает в int*** field
-void display(int** field);  // отображает текущий шаг на экране
+void update_field(int** field);
+void display(int** field);
 
 int get_right_index_x(int x);
 int get_right_index_y(int y);
 
-void free_field(int** array);  // освобождает память
-void display_hello(void);      // привет мир
+void free_field(int** array);
+void display_hello(void);
 
 int main(void) {
     int** matr = create_matrix();
     int speed = 100000;
-    // инициализация библиотеку curses
 
     if (freopen("/dev/tty", "r", stdin)) initscr();
-    //  при вводе, вводимые символы не будут видны
+
     noecho();
-    // что оно делает вообще
+
     nodelay(stdscr, TRUE);
-    // cbreak отменяет действие raw (полный контроль клавиатуры)
+
     cbreak();
-    // убирает курсор
+
     curs_set(0);
 
     char ch = ' ';
     do {
         ch = getch();
         update_field(matr);
-        if (ch == 'k' || ch == 'K') speed += 10000;
-        if (ch == 'm' || ch == 'M') speed -= 10000;
+        if (speed < 200000 && (ch == 'm' || ch == 'M')) speed += 10000;
+        if (speed > 10000 && (ch == 'k' || ch == 'K')) speed -= 10000;
 
         clear();
         usleep(speed);
         display_hello();
         display(matr);
-        printw("\nspeed == %d, k and m for change speed, ch = %c", speed, ch);
+        printw("\nspeed == %d, k and m for change speed", 21 - (speed / 10000));
 
         refresh();
 
@@ -65,20 +59,15 @@ int main(void) {
 }
 
 void update_field(int** field) {
-    // создаем новую матрицу
     int** new_array = allocate();
 
-    // идем по матрице
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
         for (int j = 0; j < FIELD_WIDTH; ++j) {
-            // смотрим количество соседей
             int nb = get_alive_neighbours(field, j, i);
 
-            if ((field[i][j]) == 0)  // dead inside
-            {
+            if ((field[i][j]) == 0) {
                 if (nb == 3) new_array[i][j] = 1;
-            } else  // alive outside
-            {
+            } else {
                 if (nb == 2 || nb == 3) {
                     new_array[i][j] = 1;
                 } else
@@ -89,25 +78,22 @@ void update_field(int** field) {
 
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
         for (int j = 0; j < FIELD_WIDTH; ++j) {
-            // почему в скобочках переменная, второй раз такое вижу
             (field)[i][j] = new_array[i][j];
         }
     }
 
     free_field(new_array);
 }
-// передаем матрицу и координаты
+
 int get_alive_neighbours(int** field, int x, int y) {
     int count = 0;
 
-    // итерируемся по квадратику 3 на 3
     for (int dx = -1; dx <= 1; ++dx) {
         for (int dy = -1; dy <= 1; ++dy) {
-            // если мы в серединке, то пропускаем
             if (dx == 0 && dy == 0) continue;
             int x_ind = get_right_index_x(x + dx);
             int y_ind = get_right_index_y(y + dy);
-            // если в этой точке есть клетка, то обновляем счетчик
+
             if (field[y_ind][x_ind] == 1) count++;
         }
     }
@@ -172,19 +158,16 @@ void display_hello() {
 }
 
 int** allocate() {
-    // создание указателя на указатель на память в размере длины матрицы?
     int** field = calloc(FIELD_HEIGHT, sizeof(int*));
-    // если не получилось выделить паммять, выводим что все пропало и выходим из проги?
     if (field == NULL) {
         printw("memory error");
         free(field);
         exit(0);
     }
-    // идем от нуля до количества строк массива
+
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
-        // выделяем память для каждого массива длинной в количество колонок
         field[i] = calloc(FIELD_WIDTH, sizeof(int));
-        // чистим память хули
+
         if (field[i] == NULL) {
             for (int j = 0; j < FIELD_HEIGHT; ++j) free(field[j]);
 
@@ -194,16 +177,12 @@ int** allocate() {
             exit(0);
         }
     }
-    // возвращаем матрицу
+
     return field;
 }
 
 int** create_matrix() {
-    // -- create
-
     int** field = allocate();
-
-    // -- input
 
     char c;
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
