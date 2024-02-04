@@ -3,18 +3,12 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+
 #define FIELD_HEIGHT 25
 #define FIELD_WIDTH 80
 
 #define DEAD_CELL " "
 #define LIVE_CELL "*"
-
-#define speed_1 100000
-#define speed_2 50000
-#define speed_3 25000
-#define speed_4 15000
-#define speed_5 7500
-#define speed_6 3500
 
 /*
  * компилировать код только с флагами -Wall -Werror -Wextra -lncurses
@@ -32,41 +26,40 @@ int get_right_index_x(int x);
 int get_right_index_y(int y);
 
 void free_field(int** array);  // освобождает память
+void display_hello(void);      // привет мир
 
 int main(void) {
     int** matr = create_matrix();
-    int speed = speed_1;
+    int speed = 100000;
     // инициализация библиотеку curses
-    initscr();
-    // при вводе, вводимые символы не будут видны
+
+    if (freopen("/dev/tty", "r", stdin)) initscr();
+    //  при вводе, вводимые символы не будут видны
     noecho();
     // что оно делает вообще
-    nodelay(stdscr, FALSE);
+    nodelay(stdscr, TRUE);
     // cbreak отменяет действие raw (полный контроль клавиатуры)
     cbreak();
     // убирает курсор
     curs_set(0);
 
-    char ch;
+    char ch = ' ';
     do {
         ch = getch();
         update_field(matr);
+        if (ch == 'k' || ch == 'K') speed += 10000;
+        if (ch == 'm' || ch == 'M') speed -= 10000;
 
         clear();
-
-        printw("                                             ___    _ _ ___     \n");
-        printw("                    ___ ___ _____ ___    ___|  _|  | |_|  _|___ \n");
-        printw("                   | . | .'|     | -_|  | . |  _|  | | |  _| -_|\n");
-        printw("                   |_  |__,|_|_|_|___|  |___|_|    |_|_|_| |___|\n");
-        printw("                   |___|                                        \n");
-
+        usleep(speed);
+        display_hello();
         display(matr);
         printw("\nspeed == %d, k and m for change speed, ch = %c", speed, ch);
+
         refresh();
 
-        usleep(speed);
-    } while (ch != 'q');
-
+    } while (ch != 'q' || ch != 'Q');
+    free_field(matr);
     endwin();
     return 0;
 }
@@ -151,6 +144,31 @@ void display(int** field) {
     }
 
     for (int i = 0; i < FIELD_WIDTH + 2; ++i) printw("-");
+}
+
+void display_hello() {
+    start_color();
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
+
+    init_pair(2, COLOR_BLUE, COLOR_BLACK);
+    init_pair(3, COLOR_RED, COLOR_BLACK);
+    attron(COLOR_PAIR(1));
+
+    printw("                                             ___    _ _ ___     \n");
+    printw("                    ___ ___ _____ ___    ___|  _|  | |_|  _|___ \n");
+
+    attroff(COLOR_PAIR(1));
+    attron(COLOR_PAIR(2));
+
+    printw("                   | . | .'|     | -_|  | . |  _|  | | |  _| -_|\n");
+
+    attroff(COLOR_PAIR(2));
+    attron(COLOR_PAIR(3));
+
+    printw("                   |_  |__,|_|_|_|___|  |___|_|    |_|_|_| |___|\n");
+    printw("                   |___|                                        \n");
+
+    attroff(COLOR_PAIR(3));
 }
 
 int** allocate() {
