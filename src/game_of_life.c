@@ -47,7 +47,9 @@ int main(void) {
     // убирает курсор
     curs_set(0);
 
-    while (1) {
+    char ch;
+    do {
+        ch = getch();
         update_field(matr);
 
         clear();
@@ -57,13 +59,13 @@ int main(void) {
         printw("                   | . | .'|     | -_|  | . |  _|  | | |  _| -_|\n");
         printw("                   |_  |__,|_|_|_|___|  |___|_|    |_|_|_| |___|\n");
         printw("                   |___|                                        \n");
-
+        
         display(matr);
         printw("\nspeed == %d, k and m for change speed", speed);
         refresh();
 
         usleep(speed_3);
-    }
+    } while (ch != 'q');
 
     endwin();
     return 0;
