@@ -9,13 +9,20 @@
 
 #define DEAD_CELL " "
 #define LIVE_CELL "*"
+
+#define speed_1 100000
+#define speed_2 50000
+#define speed_3 25000
+#define speed_4 15000
+#define speed_5 7500
+#define speed_6 3500
+
 /*
- * компилировать код только с флагами -Wall -Werror -Wextra
- *
+ * компилировать код только с флагами -Wall -Werror -Wextra -lncurses
  */
 
-int** allocate();       // выделяет память для массива
-int** create_matrix();  // создает массив игрового поля 80x25 клеток и читает поле со стандартного ввода
+int** allocate(void);       // выделяет память для массива
+int** create_matrix(void);  // создает массив игрового поля 80x25 клеток и читает поле со стандартного ввода
 int get_alive_neighbours(int** field, int x,
                          int y);  // возвращает количество живых клеток вокруг данной, принимает
                                   // координаты клетки (необходимо учитывать то, что края поля соединены)
@@ -26,55 +33,49 @@ int get_right_index_x(int x);
 int get_right_index_y(int y);
 
 void free_field(int** array);  // освобождает память
-
-void delay(int seconds) {
-    clock_t start_time = clock();
-
-    while ((clock() - start_time) / ((clock_t)CLOCKS_PER_SEC) < ((clock_t)seconds)) {
-    }
-}
-
-int main() {
+int main(void) {
     int** matr = create_matrix();
+    // инициализация библиотеку curses
     initscr();
+    // при вводе, вводимые символы не будут видны
     noecho();
-    nodelay(stdscr, TRUE);
+    // что оно делает вообще
+    nodelay(stdscr, FALSE);
+    // cbreak отменяет действие raw (полный контроль клавиатуры)
     cbreak();
-    curs_set(FALSE);
+    // убирает курсор
+    curs_set(0);
 
     while (1) {
         update_field(matr);
 
         clear();
+        printw("Game of life\n");
         display(matr);
+        printw("\nhello world");
         refresh();
 
-        usleep(1);
+        usleep(speed_3);
     }
 
+    endwin();
     return 0;
 }
 
-int speed(int n) {
-    int speed;
-    if (n == 1) {
-        speed = 100000;
-    }
-    if (n == 2) speed = 4000;
-    return speed;
-}
-
 void update_field(int** field) {
+    // создаем новую матрицу
     int** new_array = allocate();
 
+    // идем по матрице
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
         for (int j = 0; j < FIELD_WIDTH; ++j) {
+            // смотрим количество соседей
             int nb = get_alive_neighbours(field, j, i);
 
-            if ((field)[i][j] == 0)  // dead
+            if ((field[i][j]) == 0)  // dead inside
             {
                 if (nb == 3) new_array[i][j] = 1;
-            } else  // alive
+            } else  // alive outside
             {
                 if (nb == 2 || nb == 3) {
                     new_array[i][j] = 1;
@@ -86,21 +87,25 @@ void update_field(int** field) {
 
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
         for (int j = 0; j < FIELD_WIDTH; ++j) {
+            // почему в скобочках переменная, второй раз такое вижу
             (field)[i][j] = new_array[i][j];
         }
     }
 
     free_field(new_array);
 }
-
+// передаем матрицу и координаты
 int get_alive_neighbours(int** field, int x, int y) {
     int count = 0;
 
+    // итерируемся по квадратику 3 на 3
     for (int dx = -1; dx <= 1; ++dx) {
         for (int dy = -1; dy <= 1; ++dy) {
+            // если мы в серединке, то пропускаем
             if (dx == 0 && dy == 0) continue;
             int x_ind = get_right_index_x(x + dx);
             int y_ind = get_right_index_y(y + dy);
+            // если в этой точке есть клетка, то обновляем счетчик
             if (field[y_ind][x_ind] == 1) count++;
         }
     }
@@ -140,26 +145,29 @@ void display(int** field) {
 }
 
 int** allocate() {
+    // создание указателя на указатель на память в размере длины матрицы?
     int** field = calloc(FIELD_HEIGHT, sizeof(int*));
-
+    // если не получилось выделить паммять, выводим что все пропало и выходим из проги?
     if (field == NULL) {
-        printw("memoy error");
+        printw("memory error");
+        // это из какой библиотеки?
         exit(0);
     }
-
+    // идем от нуля до количества строк массива
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
+        // выделяем память для каждого массива длинной в количество колонок
         field[i] = calloc(FIELD_WIDTH, sizeof(int));
-
+        // чистим память хули
         if (field[i] == NULL) {
-            for (int i = 0; i < FIELD_HEIGHT; ++i) free(field[i]);
+            for (int j = 0; j < FIELD_HEIGHT; ++j) free(field[j]);
 
             free(field);
 
-            printw("memoy error");
+            printw("memory error");
             exit(0);
         }
     }
-
+    // возвращаем матрицу
     return field;
 }
 
@@ -175,11 +183,11 @@ int** create_matrix() {
         for (int j = 0; j < FIELD_WIDTH; ++j) {
             c = getchar();
 
-            if (c == '0' || c == ' ') {
+            if (c == '0')
                 field[i][j] = 0;
-            } else if (c == '1' || c == '*') {
+            else if (c == '1')
                 field[i][j] = 1;
-            } else {
+            else {
                 free_field(field);
 
                 printw("input error");
@@ -196,6 +204,5 @@ void free_field(int** array) {
     for (int i = 0; i < FIELD_HEIGHT; ++i) {
         free(array[i]);
     }
-
     free(array);
 }
