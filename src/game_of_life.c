@@ -35,6 +35,9 @@ void delay(int seconds) {
 }
 
 int main() {
+    char button = '\0';
+    WINDOW* win = newwin(FIELD_HEIGHT, FIELD_WIDTH, 0, 0);
+
     int** matr = create_matrix();
     initscr();
     noecho();
@@ -42,14 +45,18 @@ int main() {
     cbreak();
     curs_set(FALSE);
 
-    while (1) {
+    wrefresh(win);
+
+    while (!(button == 'q' || button == 'Q')) {
         update_field(matr);
 
         clear();
         display(matr);
         refresh();
 
+        button = wgetch(win);
         usleep(1);
+        wrefresh(win);
     }
 
     return 0;
