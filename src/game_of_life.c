@@ -1,3 +1,4 @@
+#include <locale.h>
 #include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,9 +7,6 @@
 
 #define FIELD_HEIGHT 25
 #define FIELD_WIDTH 80
-
-#define DEAD_CELL " "
-#define LIVE_CELL "*"
 
 int** allocate(void);
 int** create_matrix(void);
@@ -26,6 +24,8 @@ void display_hello(void);
 int main(void) {
     int** matr = create_matrix();
     int speed = 100000;
+
+    setlocale(LC_ALL, "");
 
     if (freopen("/dev/tty", "r", stdin)) initscr();
 
@@ -117,13 +117,13 @@ void display(int** field) {
     for (int i = 0; i < FIELD_WIDTH + 2; ++i) printw("-");
     printw("\n");
 
-    for (int i = 0; i < FIELD_HEIGHT; ++i) {
+    for (int i = 0; i < FIELD_HEIGHT / 2; ++i) {
         printw("|");
         for (int j = 0; j < FIELD_WIDTH; ++j) {
-            if (field[i][j] == 1)
-                printw(LIVE_CELL);
-            else
-                printw(DEAD_CELL);
+            const char* map[4] = {" ", "▄", "▀", "█"};  // block characters
+            int index = ((field[i * 2][j] & 1) << 1)    // top pixel active
+                        | (field[i * 2 + 1][j] & 1);    // bottom pixel active
+            printw(map[index]);
         }
         printw("|");
         printw("\n");
