@@ -34,6 +34,7 @@
 *.i*86
 *.x86_64
 *.hex
+src/game_of_life
 
 # Debug files
 *.dSYM/
@@ -57,3 +58,6 @@ dkms.conf
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Editors
+/.vscode
