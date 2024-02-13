@@ -124,23 +124,36 @@ int get_right_index_y(int y, int HEIGHT) {
     return y;
 }
 
+
 void display(int** field, int HEIGHT, int WIDTH) {
-    for (int i = 0; i < WIDTH + 2; ++i) printw("-");
+    for (int i = 0; i < (WIDTH / 2) + 2; ++i) printw("-");
     printw("\n");
 
-    for (int i = 0; i < HEIGHT / 2; ++i) {
+    for (int i = 0; i < HEIGHT / 4; ++i) {
         printw("|");
-        for (int j = 0; j < WIDTH; ++j) {
-            const char* map[4] = {" ", "▄", "▀", "█"};  // block characters
-            int index = ((field[i * 2][j] & 1) << 1)    // top pixel active
-                        | (field[i * 2 + 1][j] & 1);    // bottom pixel active
-            printw(map[index]);
+        for (int j = 0; j < WIDTH / 2; ++j) {
+            int ib = i * 4;  // i base
+            int jb = j * 2;  // j base
+            wchar_t braille = 0x2800;
+            if (field[ib + 0][jb + 0]) braille += 0x01;
+            if (field[ib + 1][jb + 0]) braille += 0x02;
+            if (field[ib + 2][jb + 0]) braille += 0x04;
+            if (field[ib + 3][jb + 0]) braille += 0x40;
+            if (field[ib + 0][jb + 1]) braille += 0x08;
+            if (field[ib + 1][jb + 1]) braille += 0x10;
+            if (field[ib + 2][jb + 1]) braille += 0x20;
+            if (field[ib + 3][jb + 1]) braille += 0x80;
+            printw("%lc", braille);
+
         }
         printw("|");
         printw("\n");
     }
 
+
+
     for (int i = 0; i < WIDTH + 2; ++i) printw("-");
+
 }
 
 void display_hello() {
