@@ -124,7 +124,6 @@ int get_right_index_y(int y, int HEIGHT) {
     return y;
 }
 
-
 void display(int** field, int HEIGHT, int WIDTH) {
     for (int i = 0; i < (WIDTH / 2) + 2; ++i) printw("-");
     printw("\n");
@@ -144,16 +143,12 @@ void display(int** field, int HEIGHT, int WIDTH) {
             if (field[ib + 2][jb + 1]) braille += 0x20;
             if (field[ib + 3][jb + 1]) braille += 0x80;
             printw("%lc", braille);
-
         }
         printw("|");
         printw("\n");
     }
 
-
-
-    for (int i = 0; i < WIDTH + 2; ++i) printw("-");
-
+    for (int i = 0; i < (WIDTH / 2) + 2; ++i) printw("-");
 }
 
 void display_hello() {
