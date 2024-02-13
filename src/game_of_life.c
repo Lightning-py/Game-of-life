@@ -2,27 +2,38 @@
 #include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <string.h>
 #include <unistd.h>
 
 #define FIELD_HEIGHT 25
 #define FIELD_WIDTH 80
 
-int** allocate(void);
-int** create_matrix(void);
-int get_alive_neighbours(int** field, int x, int y);
+int** allocate(int HEIGHT, int WIDTH);
+int** create_matrix(int HEIGHT, int WIDTH);
+int get_alive_neighbours(int** field, int x, int y, int HEIGHT, int WIDTH);
 
-void update_field(int** field);
-void display(int** field);
+void update_field(int** field, int HEIGHT, int WIDTH);
+void display(int** field, int HEIGHT, int WIDTH);
 
-int get_right_index_x(int x);
-int get_right_index_y(int y);
+int get_right_index_x(int x, int WIDTH);
+int get_right_index_y(int y, int HEIGHT);
 
-void free_field(int** array);
+void free_field(int** array, int HEIGHT);
 void display_hello(void);
 
-int main(void) {
-    int** matr = create_matrix();
+int main(int argc, char* argv[]) {
+    int WIDTH = FIELD_WIDTH, HEIGHT = FIELD_HEIGHT;
+
+    if (argc == 3) {
+        if (!(sscanf(argv[1], "%d", &HEIGHT) == 1 && sscanf(argv[2], "%d", &WIDTH) == 1)) {
+            printf("invalid command string arguments\n");
+            WIDTH = FIELD_WIDTH;
+            HEIGHT = FIELD_HEIGHT;
+        }
+    }
+
+    int** matr = create_matrix(HEIGHT, WIDTH);
+    printf("lol");
     int speed = 100000;
 
     setlocale(LC_ALL, "");
@@ -40,30 +51,30 @@ int main(void) {
     char ch = ' ';
     do {
         ch = getch();
-        update_field(matr);
+        update_field(matr, HEIGHT, WIDTH);
         if (speed < 200000 && (ch == 'm' || ch == 'M')) speed += 10000;
         if (speed > 10000 && (ch == 'k' || ch == 'K')) speed -= 10000;
 
         clear();
         usleep(speed);
         display_hello();
-        display(matr);
+        display(matr, HEIGHT, WIDTH);
         printw("\nspeed == %d, k and m for change speed", 21 - (speed / 10000));
 
         refresh();
 
     } while (ch != 'q' && ch != 'Q');
-    free_field(matr);
+    free_field(matr, HEIGHT);
     endwin();
     return 0;
 }
 
-void update_field(int** field) {
-    int** new_array = allocate();
+void update_field(int** field, int HEIGHT, int WIDTH) {
+    int** new_array = allocate(HEIGHT, WIDTH);
 
-    for (int i = 0; i < FIELD_HEIGHT; ++i) {
-        for (int j = 0; j < FIELD_WIDTH; ++j) {
-            int nb = get_alive_neighbours(field, j, i);
+    for (int i = 0; i < HEIGHT; ++i) {
+        for (int j = 0; j < WIDTH; ++j) {
+            int nb = get_alive_neighbours(field, j, i, HEIGHT, WIDTH);
 
             if ((field[i][j]) == 0) {
                 if (nb == 3) new_array[i][j] = 1;
@@ -76,23 +87,23 @@ void update_field(int** field) {
         }
     }
 
-    for (int i = 0; i < FIELD_HEIGHT; ++i) {
-        for (int j = 0; j < FIELD_WIDTH; ++j) {
+    for (int i = 0; i < HEIGHT; ++i) {
+        for (int j = 0; j < WIDTH; ++j) {
             (field)[i][j] = new_array[i][j];
         }
     }
 
-    free_field(new_array);
+    free_field(new_array, HEIGHT);
 }
 
-int get_alive_neighbours(int** field, int x, int y) {
+int get_alive_neighbours(int** field, int x, int y, int HEIGHT, int WIDTH) {
     int count = 0;
 
     for (int dx = -1; dx <= 1; ++dx) {
         for (int dy = -1; dy <= 1; ++dy) {
             if (dx == 0 && dy == 0) continue;
-            int x_ind = get_right_index_x(x + dx);
-            int y_ind = get_right_index_y(y + dy);
+            int x_ind = get_right_index_x(x + dx, WIDTH);
+            int y_ind = get_right_index_y(y + dy, HEIGHT);
 
             if (field[y_ind][x_ind] == 1) count++;
         }
@@ -101,25 +112,25 @@ int get_alive_neighbours(int** field, int x, int y) {
     return count;
 }
 
-int get_right_index_x(int x) {
-    if (x == -1) return FIELD_WIDTH - 1;
-    if (x == FIELD_WIDTH) return 0;
+int get_right_index_x(int x, int WIDTH) {
+    if (x == -1) return WIDTH - 1;
+    if (x == WIDTH) return 0;
     return x;
 }
 
-int get_right_index_y(int y) {
-    if (y == -1) return FIELD_HEIGHT - 1;
-    if (y == FIELD_HEIGHT) return 0;
+int get_right_index_y(int y, int HEIGHT) {
+    if (y == -1) return HEIGHT - 1;
+    if (y == HEIGHT) return 0;
     return y;
 }
 
-void display(int** field) {
-    for (int i = 0; i < FIELD_WIDTH + 2; ++i) printw("-");
+void display(int** field, int HEIGHT, int WIDTH) {
+    for (int i = 0; i < WIDTH + 2; ++i) printw("-");
     printw("\n");
 
-    for (int i = 0; i < FIELD_HEIGHT / 2; ++i) {
+    for (int i = 0; i < HEIGHT / 2; ++i) {
         printw("|");
-        for (int j = 0; j < FIELD_WIDTH; ++j) {
+        for (int j = 0; j < WIDTH; ++j) {
             const char* map[4] = {" ", "▄", "▀", "█"};  // block characters
             int index = ((field[i * 2][j] & 1) << 1)    // top pixel active
                         | (field[i * 2 + 1][j] & 1);    // bottom pixel active
@@ -129,7 +140,7 @@ void display(int** field) {
         printw("\n");
     }
 
-    for (int i = 0; i < FIELD_WIDTH + 2; ++i) printw("-");
+    for (int i = 0; i < WIDTH + 2; ++i) printw("-");
 }
 
 void display_hello() {
@@ -157,19 +168,19 @@ void display_hello() {
     attroff(COLOR_PAIR(3));
 }
 
-int** allocate() {
-    int** field = calloc(FIELD_HEIGHT, sizeof(int*));
+int** allocate(int HEIGHT, int WIDTH) {
+    int** field = calloc(HEIGHT, sizeof(int*));
     if (field == NULL) {
         printw("memory error");
         free(field);
         exit(0);
     }
 
-    for (int i = 0; i < FIELD_HEIGHT; ++i) {
-        field[i] = calloc(FIELD_WIDTH, sizeof(int));
+    for (int i = 0; i < HEIGHT; ++i) {
+        field[i] = calloc(WIDTH, sizeof(int));
 
         if (field[i] == NULL) {
-            for (int j = 0; j < FIELD_HEIGHT; ++j) free(field[j]);
+            for (int j = 0; j < HEIGHT; ++j) free(field[j]);
 
             free(field);
 
@@ -181,12 +192,12 @@ int** allocate() {
     return field;
 }
 
-int** create_matrix() {
-    int** field = allocate();
+int** create_matrix(int HEIGHT, int WIDTH) {
+    int** field = allocate(HEIGHT, WIDTH);
 
     char c;
-    for (int i = 0; i < FIELD_HEIGHT; ++i) {
-        for (int j = 0; j < FIELD_WIDTH; ++j) {
+    for (int i = 0; i < HEIGHT; ++i) {
+        for (int j = 0; j < WIDTH; ++j) {
             c = getchar();
 
             if (c == '0')
@@ -194,7 +205,7 @@ int** create_matrix() {
             else if (c == '1')
                 field[i][j] = 1;
             else {
-                free_field(field);
+                free_field(field, HEIGHT);
 
                 printw("input error");
                 exit(0);
@@ -206,8 +217,8 @@ int** create_matrix() {
     return field;
 }
 
-void free_field(int** array) {
-    for (int i = 0; i < FIELD_HEIGHT; ++i) {
+void free_field(int** array, int HEIGHT) {
+    for (int i = 0; i < HEIGHT; ++i) {
         free(array[i]);
     }
     free(array);
